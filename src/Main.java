@@ -1,5 +1,6 @@
 import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
@@ -9,8 +10,6 @@ public class Main {
     static ArrayList<Integer> cpuPositions = new ArrayList<>();
 
     public static void main(String[] args) {
-        System.out.println("labas");
-
         char[][] gameBoard = { // single quotes, because char is used.
                 {' ', '|', ' ', '|', ' '},
                 {'-', '+', '-', '+', '-'},
@@ -21,20 +20,38 @@ public class Main {
 
         printGameBoard(gameBoard);
 
-
         while (true) {
             // PLAYER'S TURN
             // ask input from player
             System.out.println(); // empty line
-            Scanner scan = new Scanner(System.in);
-            System.out.println("Enter your placement of 'X' (1-9):");
-            int playerPosition = scan.nextInt();
 
-            // Keep asking while position is not good
-            while (playerPositions.contains(playerPosition) || cpuPositions.contains(playerPosition)) {
-                System.out.println("Position taken! Enter a correct position");
-                playerPosition = scan.nextInt();
+            boolean error;
+            int playerPosition = 0;
+
+            // validate input as acceptable integer value only
+            do {
+                try {
+                    Scanner scanner = new Scanner(System.in);
+                    System.out.println("Enter your placement of 'X' (1-9): Enter position number (1-9):");
+                    playerPosition = scanner.nextInt();
+
+                    if (playerPosition < 1 || playerPosition > 9) {
+                        throw new InputMismatchException();
+                    }
+
+                    // Keep asking while position is not taken
+                    while (playerPositions.contains(playerPosition) || cpuPositions.contains(playerPosition)) {
+                        System.out.println("Position taken! Enter a correct position:");
+                        playerPosition = scanner.nextInt();
+                    }
+
+                    error = false;
+                } catch (InputMismatchException e) {
+                    System.out.print("Invalid input. ");
+                    error = true;
+                }
             }
+            while (error);
 
             System.out.println("Player picked: " + playerPosition);
 
@@ -43,9 +60,9 @@ public class Main {
             String result = checkWinner();
             if (result.length() > 0) {
                 System.out.println(result);
-                break;
+                // break;
+                restartGame();
             }
-
 
             // CPU'S TURN
             System.out.println(); // empty line
@@ -63,12 +80,10 @@ public class Main {
             result = checkWinner();
             if (result.length() > 0) {
                 System.out.println(result);
-                break;
+                // break;
+                restartGame();
             }
-
         }
-
-
     }
 
     public static void printGameBoard(char[][] gameBoard) {
@@ -156,16 +171,24 @@ public class Main {
         for (List l : winningConditions) {
             // if player position contains all items in list of any winning positions
             if (playerPositions.containsAll(l)) {
-                return "\nCongratulation you won!";
+                return "\nCongratulation you won! Restarting game.";
             } else if (cpuPositions.containsAll(l)) {
-                return "\nCPU wins! Sorry :(";
+                return "\nCPU wins! Sorry :( Restarting game.";
             }
         }
 
         if (playerPositions.size() + cpuPositions.size() == 9) {
-            System.out.println("\nNo winner.");
+            System.out.println("\nNo winner. Restarting game.");
+            restartGame();
         }
 
         return "";
+    }
+
+    public static void restartGame() {
+        playerPositions.clear(); // clear positions for new game
+        cpuPositions.clear(); // clear positions for new game
+        String[] args = new String[0]; // "String[] args = {};" also works
+        main(args);
     }
 }
